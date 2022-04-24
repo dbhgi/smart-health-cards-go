@@ -1,6 +1,9 @@
 package issuer
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -26,9 +29,15 @@ func TestIssueCard(t *testing.T) {
 		t.Fatalf("Failed to unmarshal fhir json: %s", err.Error())
 	}
 
+	// generate a fake private/public key pair
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("Failed to generate private key: %s", err.Error())
+	}
+
 	card, err := IssueCard(IssueCardInput{
-		IssuerUrl:  "",
-		PrivateKey: "",
+		IssuerUrl:  "https://smarthealth.cards/examples/issuer",
+		PrivateKey: *key,
 		FhirBundle: fhirBundle,
 	})
 	if err != nil {
