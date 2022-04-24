@@ -3,8 +3,9 @@ package issuer
 import "time"
 
 type SmartHealthCard struct {
-	IssuerUrl    string    `json:"iss"`
-	IssuanceDate time.Time `json:"nbf"`
+	IssuerUrl            string                 `json:"iss"`
+	IssuanceDate         time.Time              `json:"nbf"`
+	VerifiableCredential map[string]interface{} `json:"vc"`
 }
 
 type IssueCardInput struct {
