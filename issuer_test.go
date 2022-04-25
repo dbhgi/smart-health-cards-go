@@ -34,6 +34,7 @@ func TestIssueCard(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to generate private key: %s", err.Error())
 	}
+	fmt.Printf("generated key: %+v", key)
 
 	card, err := IssueCard(IssueCardInput{
 		IssuerUrl:  "https://smarthealth.cards/examples/issuer",
