@@ -1,10 +1,10 @@
 package issuer
 
 import (
+	bytes2 "bytes"
 	"crypto/ecdsa"
 	"encoding/json"
-	"fmt"
-	jose "gopkg.in/square/go-jose.v2"
+	"gopkg.in/square/go-jose.v2"
 	"time"
 )
 
@@ -15,27 +15,22 @@ type SmartHealthCard struct {
 }
 
 type IssueCardInput struct {
-	IssuerUrl  string
-	PrivateKey *ecdsa.PrivateKey
-	FhirBundle map[string]interface{}
+	IssuerUrl            string
+	PrivateKey           *ecdsa.PrivateKey
+	VerifiableCredential map[string]interface{}
 }
 
 func IssueCard(input IssueCardInput) (*jose.JSONWebSignature, error) {
 	card := SmartHealthCard{
 		IssuerUrl:            input.IssuerUrl,
 		IssuanceDate:         time.Now(),
-		VerifiableCredential: input.FhirBundle,
+		VerifiableCredential: input.VerifiableCredential,
 	}
 
-	jws, err := card.Sign(input.PrivateKey)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to sign card: %s", err.Error())
-	}
-
-	// need to use the sign method here - change the return value to a JSONWebSignature
-	return jws, nil
+	return card.Sign(input.PrivateKey)
 }
 
+// Sign creates the signed jws, storing its serialized value onto the SmartHealthCard struct
 func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey) (*jose.JSONWebSignature, error) {
 	signer, err := jose.NewSigner(jose.SigningKey{
 		Algorithm: jose.ES256,
@@ -50,5 +45,12 @@ func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey) (*jose.JSONWebSignature, er
 		return nil, err
 	}
 
-	return signer.Sign(bytes)
+	// remove any whitespace from the json
+	buffer := bytes2.NewBuffer(bytes)
+	err = json.Compact(buffer, bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return signer.Sign(buffer.Bytes())
 }

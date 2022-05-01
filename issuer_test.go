@@ -12,19 +12,19 @@ import (
 )
 
 func TestIssueCard(t *testing.T) {
-	file, err := os.Open("fhir.json")
+	file, err := os.Open("verifiable_credential.json")
 	if err != nil {
-		t.Fatalf("Failed to open fhir.json: %s", err.Error())
+		t.Fatalf("Failed to open verifiable_credential.json: %s", err.Error())
 	}
 	defer file.Close()
 
-	fhirBytes, err := ioutil.ReadAll(file)
+	vcBytes, err := ioutil.ReadAll(file)
 	if err != nil {
 		t.Fatalf("Failed to read json into bytes: %s", err.Error())
 	}
 
-	var fhirBundle map[string]interface{}
-	err = json.Unmarshal(fhirBytes, &fhirBundle)
+	var verifiableCredential map[string]interface{}
+	err = json.Unmarshal(vcBytes, &verifiableCredential)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal fhir json: %s", err.Error())
 	}
@@ -36,9 +36,9 @@ func TestIssueCard(t *testing.T) {
 	}
 
 	card, err := IssueCard(IssueCardInput{
-		IssuerUrl:  "https://smarthealth.cards/examples/issuer",
-		PrivateKey: key,
-		FhirBundle: fhirBundle,
+		IssuerUrl:            "https://smarthealth.cards/examples/issuer",
+		PrivateKey:           key,
+		VerifiableCredential: verifiableCredential,
 	})
 	if err != nil {
 		t.Fatalf("Failed to issue card: %s", err.Error())
@@ -48,6 +48,22 @@ func TestIssueCard(t *testing.T) {
 		t.Fatalf("Failed to issue card: unknown error")
 	}
 
-	// now can test something with the card
-	fmt.Printf("Issued card: %+v", *card)
+	result, err := card.Verify(&key.PublicKey)
+	if err != nil {
+		t.Fatalf("Failed to verify the card to retrieve its contents: %s", err.Error())
+	}
+	fmt.Printf("verified card: %s", result)
+
+	// we can also test that a different key fails to verify
+	fakeKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("Failed to generate fake key: %s", err.Error())
+	}
+
+	// we expect this to return an error since it's a fake key
+	if _, err = card.Verify(&fakeKey.PublicKey); err == nil {
+		t.Fatalf("The card was verified using a fake key. Something is wrong with the card.")
+	}
+
+	return
 }
