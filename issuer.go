@@ -16,7 +16,7 @@ type SmartHealthCard struct {
 
 type IssueCardInput struct {
 	IssuerUrl  string
-	PrivateKey ecdsa.PrivateKey
+	PrivateKey *ecdsa.PrivateKey
 	FhirBundle map[string]interface{}
 }
 
@@ -36,7 +36,7 @@ func IssueCard(input IssueCardInput) (*jose.JSONWebSignature, error) {
 	return jws, nil
 }
 
-func (s SmartHealthCard) Sign(key ecdsa.PrivateKey) (*jose.JSONWebSignature, error) {
+func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey) (*jose.JSONWebSignature, error) {
 	signer, err := jose.NewSigner(jose.SigningKey{
 		Algorithm: jose.ES256,
 		Key:       key,
