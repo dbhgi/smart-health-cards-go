@@ -5,14 +5,13 @@ import (
 	"compress/flate"
 	"crypto/ecdsa"
 	"encoding/json"
-	"fmt"
 	"gopkg.in/square/go-jose.v2"
 	"time"
 )
 
 type SmartHealthCard struct {
 	IssuerUrl            string                 `json:"iss"`
-	IssuanceDate         time.Time              `json:"nbf"`
+	IssuanceDate         int                    `json:"nbf"`
 	VerifiableCredential map[string]interface{} `json:"vc"`
 }
 
@@ -25,7 +24,7 @@ type IssueCardInput struct {
 func IssueCard(input IssueCardInput) (*jose.JSONWebSignature, error) {
 	card := SmartHealthCard{
 		IssuerUrl:            input.IssuerUrl,
-		IssuanceDate:         time.Now(),
+		IssuanceDate:         time.Now().Hour(),
 		VerifiableCredential: input.VerifiableCredential,
 	}
 
@@ -34,10 +33,19 @@ func IssueCard(input IssueCardInput) (*jose.JSONWebSignature, error) {
 
 // Sign creates the signed jws, storing its serialized value onto the SmartHealthCard struct
 func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey) (*jose.JSONWebSignature, error) {
+	options := jose.SignerOptions{
+		NonceSource: nil,
+		EmbedJWK:    true,
+		ExtraHeaders: map[jose.HeaderKey]interface{}{
+			"zip": "DEF",
+			"alg": "ES256",
+			"kid": "abc",
+		},
+	}
 	signer, err := jose.NewSigner(jose.SigningKey{
 		Algorithm: jose.ES256,
 		Key:       key,
-	}, nil)
+	}, &options)
 	if err != nil {
 		return nil, err
 	}
@@ -48,16 +56,14 @@ func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey) (*jose.JSONWebSignature, er
 	}
 
 	// remove any whitespace from the json
-	buffer := bytes2.NewBuffer(bytes)
-	err = json.Compact(buffer, bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("expanded card without whitespace: %s", buffer.String())
+	//buffer := bytes2.NewBuffer(bytes)
+	//err = json.Compact(buffer, bytes)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	// now we also need to compress the payload with DEFLATE algorithm
-	deflated, err := deflate(buffer.String())
+	deflated, err := deflate(string(bytes))
 	if err != nil {
 		return nil, err
 	}
@@ -71,10 +77,10 @@ func deflate(inflated string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer w.Close()
 	_, err = w.Write([]byte(inflated))
 	if err != nil {
 		return nil, err
 	}
+	w.Close()
 	return b.Bytes(), nil
 }

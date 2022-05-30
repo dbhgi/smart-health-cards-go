@@ -47,12 +47,17 @@ func TestIssueCard(t *testing.T) {
 	if card == nil {
 		t.Fatalf("Failed to issue card: unknown error")
 	}
+	jws, err := card.CompactSerialize()
+	if err != nil {
+		t.Fatalf("Failed to serialize the jws: %s", err.Error())
+	}
+	fmt.Printf("issued card: %s", jws)
 
 	result, err := card.Verify(&key.PublicKey)
 	if err != nil {
 		t.Fatalf("Failed to verify the card to retrieve its contents: %s", err.Error())
 	}
-	fmt.Printf("verified card: %s", result)
+	fmt.Printf("verified card - this would still need to be inflated using flate library: %s", result)
 
 	// we can also test that a different key fails to verify
 	fakeKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
