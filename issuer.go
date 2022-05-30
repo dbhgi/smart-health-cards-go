@@ -2,8 +2,10 @@ package issuer
 
 import (
 	bytes2 "bytes"
+	"compress/flate"
 	"crypto/ecdsa"
 	"encoding/json"
+	"fmt"
 	"gopkg.in/square/go-jose.v2"
 	"time"
 )
@@ -52,5 +54,27 @@ func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey) (*jose.JSONWebSignature, er
 		return nil, err
 	}
 
-	return signer.Sign(buffer.Bytes())
+	fmt.Printf("expanded card without whitespace: %s", buffer.String())
+
+	// now we also need to compress the payload with DEFLATE algorithm
+	deflated, err := deflate(buffer.String())
+	if err != nil {
+		return nil, err
+	}
+
+	return signer.Sign(deflated)
+}
+
+func deflate(inflated string) ([]byte, error) {
+	var b bytes2.Buffer
+	w, err := flate.NewWriter(&b, flate.BestCompression)
+	if err != nil {
+		return nil, err
+	}
+	defer w.Close()
+	_, err = w.Write([]byte(inflated))
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
