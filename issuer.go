@@ -39,6 +39,7 @@ func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey) (*jose.JSONWebSignature, er
 		ExtraHeaders: map[jose.HeaderKey]interface{}{
 			"zip": "DEF",
 			"alg": "ES256",
+			// TODO not sure where this key ID is supposed to come from - in the js example it is generated from the node jose library.
 			"kid": "abc",
 		},
 	}
@@ -54,13 +55,6 @@ func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey) (*jose.JSONWebSignature, er
 	if err != nil {
 		return nil, err
 	}
-
-	// remove any whitespace from the json
-	//buffer := bytes2.NewBuffer(bytes)
-	//err = json.Compact(buffer, bytes)
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	// now we also need to compress the payload with DEFLATE algorithm
 	deflated, err := deflate(string(bytes))
