@@ -1,12 +1,19 @@
 package issuer
 
 import (
-	bytes2 "bytes"
+	"bytes"
 	"compress/flate"
 	"crypto/ecdsa"
 	"encoding/json"
+	"github.com/skip2/go-qrcode"
 	"gopkg.in/square/go-jose.v2"
+	"strconv"
 	"time"
+)
+
+const (
+	MAX_SINGLE_JWS_SIZE = 1195
+	MAX_CHUNK_SIZE      = 1191
 )
 
 type SmartHealthCard struct {
@@ -22,14 +29,35 @@ type IssueCardInput struct {
 	VerifiableCredential map[string]interface{}
 }
 
-func IssueCard(input IssueCardInput) (*jose.JSONWebSignature, error) {
+func IssueCard(input IssueCardInput) (string, error) {
 	card := SmartHealthCard{
 		IssuerUrl:            input.IssuerUrl,
 		IssuanceDate:         time.Now().Hour(),
 		VerifiableCredential: input.VerifiableCredential,
 	}
 
-	return card.Sign(input.PrivateKey, input.KeyId)
+	jws, err := card.Sign(input.PrivateKey, input.KeyId)
+	if err != nil {
+		return "", err
+	}
+	return jws.CompactSerialize()
+}
+
+// TODO for a health card containing a larger payload, we would need to split the jws into chunks.
+func GenerateQRCode(jws string) error {
+	// before generating to a qr code we need to convert each character to a byte
+	runes := bytes.Runes([]byte(jws))
+	//fmt.Printf("Got runes: %+v", runes)
+	s := "shc:/"
+	for _, r := range runes {
+		// the walkthrough does this subtraction but I'm not sure why...
+		s += strconv.Itoa(int(r - 45))
+	}
+	err := qrcode.WriteFile(s, qrcode.Low, 256, "qr.png")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Sign creates the signed jws, storing its serialized value onto the SmartHealthCard struct
@@ -51,13 +79,13 @@ func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey, keyId string) (*jose.JSONWe
 		return nil, err
 	}
 
-	bytes, err := json.Marshal(s)
+	cardBytes, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
 	}
 
 	// now we also need to compress the payload with DEFLATE algorithm
-	deflated, err := deflate(string(bytes))
+	deflated, err := deflate(string(cardBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +94,7 @@ func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey, keyId string) (*jose.JSONWe
 }
 
 func deflate(inflated string) ([]byte, error) {
-	var b bytes2.Buffer
+	var b bytes.Buffer
 	w, err := flate.NewWriter(&b, flate.BestCompression)
 	if err != nil {
 		return nil, err
@@ -75,6 +103,6 @@ func deflate(inflated string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	w.Close()
+	_ = w.Close()
 	return b.Bytes(), nil
 }

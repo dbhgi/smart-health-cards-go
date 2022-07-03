@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"gopkg.in/square/go-jose.v2"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -40,7 +41,7 @@ func TestIssueCard(t *testing.T) {
 	// since verifiers will check that the public key ID matches the private key id in the jws header.
 	keyId := uuid.NewString()
 
-	card, err := IssueCard(IssueCardInput{
+	jws, err := IssueCard(IssueCardInput{
 		IssuerUrl:            "https://smarthealth.cards/examples/issuer",
 		PrivateKey:           key,
 		VerifiableCredential: verifiableCredential,
@@ -50,20 +51,21 @@ func TestIssueCard(t *testing.T) {
 		t.Fatalf("Failed to issue card: %s", err.Error())
 	}
 
-	if card == nil {
+	if jws == "" {
 		t.Fatalf("Failed to issue card: unknown error")
 	}
-	jws, err := card.CompactSerialize()
+
+	fmt.Printf("Created JWS:\n%s\n", jws)
+
+	card, err := jose.ParseSigned(jws)
 	if err != nil {
-		t.Fatalf("Failed to serialize the jws: %s", err.Error())
+		t.Fatalf("Failed to parse signed JWS from the issued jws: %s", err.Error())
 	}
-	fmt.Printf("issued card: %s", jws)
 
 	_, err = card.Verify(&key.PublicKey)
 	if err != nil {
 		t.Fatalf("Failed to verify the card to retrieve its contents: %s", err.Error())
 	}
-	//fmt.Printf("verified card - this would still need to be inflated using flate library: %s", result)
 
 	// we can also test that a different key fails to verify
 	fakeKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -74,6 +76,11 @@ func TestIssueCard(t *testing.T) {
 	// we expect this to return an error since it's a fake key
 	if _, err = card.Verify(&fakeKey.PublicKey); err == nil {
 		t.Fatalf("The card was verified using a fake key. Something is wrong with the card.")
+	}
+
+	err = GenerateQRCode(jws)
+	if err != nil {
+		t.Fatalf("Failed to generate QR code from JWS: %s", err.Error())
 	}
 
 	return
