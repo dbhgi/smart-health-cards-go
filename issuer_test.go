@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -35,10 +36,15 @@ func TestIssueCard(t *testing.T) {
 		t.Fatalf("Failed to generate private key: %s", err.Error())
 	}
 
+	// note that the keyId needs to be served up as part of the public key at the .well-known/jwks.json
+	// since verifiers will check that the public key ID matches the private key id in the jws header.
+	keyId := uuid.NewString()
+
 	card, err := IssueCard(IssueCardInput{
 		IssuerUrl:            "https://smarthealth.cards/examples/issuer",
 		PrivateKey:           key,
 		VerifiableCredential: verifiableCredential,
+		KeyId:                keyId,
 	})
 	if err != nil {
 		t.Fatalf("Failed to issue card: %s", err.Error())

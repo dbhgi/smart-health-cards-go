@@ -5,7 +5,6 @@ import (
 	"compress/flate"
 	"crypto/ecdsa"
 	"encoding/json"
-	"github.com/google/uuid"
 	"gopkg.in/square/go-jose.v2"
 	"time"
 )
@@ -19,6 +18,7 @@ type SmartHealthCard struct {
 type IssueCardInput struct {
 	IssuerUrl            string
 	PrivateKey           *ecdsa.PrivateKey
+	KeyId                string
 	VerifiableCredential map[string]interface{}
 }
 
@@ -29,18 +29,18 @@ func IssueCard(input IssueCardInput) (*jose.JSONWebSignature, error) {
 		VerifiableCredential: input.VerifiableCredential,
 	}
 
-	return card.Sign(input.PrivateKey)
+	return card.Sign(input.PrivateKey, input.KeyId)
 }
 
 // Sign creates the signed jws, storing its serialized value onto the SmartHealthCard struct
-func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey) (*jose.JSONWebSignature, error) {
+func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey, keyId string) (*jose.JSONWebSignature, error) {
 	options := jose.SignerOptions{
 		NonceSource: nil,
 		EmbedJWK:    true,
 		ExtraHeaders: map[jose.HeaderKey]interface{}{
 			"zip": "DEF",
 			"alg": "ES256",
-			"kid": uuid.New(),
+			"kid": keyId,
 		},
 	}
 	signer, err := jose.NewSigner(jose.SigningKey{
