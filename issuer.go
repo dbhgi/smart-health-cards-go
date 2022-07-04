@@ -5,6 +5,7 @@ import (
 	"compress/flate"
 	"crypto/ecdsa"
 	"encoding/json"
+	"fmt"
 	"github.com/skip2/go-qrcode"
 	"gopkg.in/square/go-jose.v2"
 	"strconv"
@@ -50,9 +51,15 @@ func GenerateQRCode(jws string) error {
 	//fmt.Printf("Got runes: %+v", runes)
 	s := "shc:/"
 	for _, r := range runes {
+		nextRune := strconv.Itoa(int(r - 45))
+		if len(nextRune) == 1 {
+			nextRune = "0" + nextRune
+		}
+		fmt.Printf("adding rune: %s\n", nextRune)
 		// the walkthrough does this subtraction but I'm not sure why...
-		s += strconv.Itoa(int(r - 45))
+		s += nextRune
 	}
+	fmt.Printf("GENERATED QR DATA: %s\n", s)
 	err := qrcode.WriteFile(s, qrcode.Low, 256, "qr.png")
 	if err != nil {
 		return err
