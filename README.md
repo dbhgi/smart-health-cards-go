@@ -19,8 +19,8 @@ This package will be used for the issuance of [SMART health cards](https://spec.
 
 - Run `go mod vendor` to install dependencies
 - Run `go test` to run `issuer_test.go`. This test file drives the issuer code by doing the following:
-  1. Load up a FHIR bundle from json file
-  2. Generate a sample private/public key pair and JWK 
+  1. Load up a Verificable Credential containing FHIR bundle from local json file
+  2. Generate a sample private/public key pair and JWK thumbprint of the private key
   3. Create a JWS using the loaded FHIR bundle and generated cryptographic values. This JWS is the underlying value that comprises the "card"
   4. Tests that the JWS can be verified using the generated public key. Note that JWS verification is different from Smart Health Card verification.
   5. Tests that no other keys may be used to verify the JWS.
