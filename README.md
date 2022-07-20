@@ -9,9 +9,9 @@ This package will be used for the issuance of [SMART health cards](https://spec.
 - What's done: 
   - Generating a JWS given a FHIR bundle, private/public key pair, JWK thumbprint for key ID
   - Verifying the JWS using the given public key
+  - Verifying the JWS with the [smarth health card verifier portal](https://demo-portals.smarthealth.cards/VerifierPortal.html)
   - Generating a scannable QR code from the generated JWS
 - What's incomplete:
-  - Verifying the JWS with the [smart health card verifier portal](https://demo-portals.smarthealth.cards/VerifierPortal.html). The JWS header "kid" value is invalid. I suspect this has to do with the way the issuer_test is generating the JWK. However, this is not really in scope for the issuer package itself, since the key ID is an input, not an output.
   - Generating QR code for large payloads. The smart health card docs indicate that cards are generally supposed to be very small payloads, however in cases where they exceed a certain threshold, they need to be split into chunks and each chunk would correspond to its own QR code. The walkthrough illustrates how the chunking process works.
   - Organizing the issuer package code such that it can be used easily by other services. Currently the issuer_test code lives alongside the issuer in the same package.
 

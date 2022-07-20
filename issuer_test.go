@@ -53,11 +53,7 @@ func TestIssueCard(t *testing.T) {
 	}
 
 	// the key ID must be a base64url-encoded SHA-256 JWK thumbprint of the key used to sign the JWS.
-	keyId := base64.URLEncoding.EncodeToString(thumbprint)
-
-	// TODO: the verifier portal is complaining about this keyId, saying it must be a base64url encoded string. I suspect
-	// it may have something to do with the way I'm generating the JWK, most example involve fetching the keyset from a third party
-	// however this problem is not really in scope for the package since it's a prerequisite to issuing the card.
+	keyId := base64.RawURLEncoding.EncodeToString(thumbprint)
 
 	jws, err := IssueCard(IssueCardInput{
 		IssuerUrl:            "https://smarthealth.cards/examples/issuer",
