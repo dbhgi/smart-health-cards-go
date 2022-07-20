@@ -16,7 +16,6 @@ import (
 )
 
 func TestIssueCard(t *testing.T) {
-	// verifiable credential may be any JSON payload
 	file, err := os.Open("verifiable_credential.json")
 	if err != nil {
 		t.Fatalf("Failed to open verifiable_credential.json: %s", err.Error())
@@ -69,6 +68,7 @@ func TestIssueCard(t *testing.T) {
 		t.Fatalf("Failed to issue card: unknown error")
 	}
 
+	// Test that the JWS can be verified using the generated public key
 	card, err := jose.ParseSigned(jws)
 	if err != nil {
 		t.Fatalf("Failed to parse signed JWS from the issued jws: %s", err.Error())
@@ -79,7 +79,7 @@ func TestIssueCard(t *testing.T) {
 		t.Fatalf("Failed to verify the card to retrieve its contents: %s", err.Error())
 	}
 
-	// we can also test that a different key fails to verify
+	// we can also test that a different key fails to verify the JWS
 	fakeKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		t.Fatalf("Failed to generate fake key: %s", err.Error())
@@ -90,6 +90,7 @@ func TestIssueCard(t *testing.T) {
 		t.Fatalf("The card was verified using a fake key. Something is wrong with the card.")
 	}
 
+	// Convert the JWS into a QR code
 	err = GenerateQRCode(jws)
 	if err != nil {
 		t.Fatalf("Failed to generate QR code from JWS: %s", err.Error())

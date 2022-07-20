@@ -13,7 +13,7 @@ This package will be used for the issuance of [SMART health cards](https://spec.
   - Generating a scannable QR code from the generated JWS
 - What's incomplete:
   - Generating QR code for large payloads. The smart health card docs indicate that cards are generally supposed to be very small payloads, however in cases where they exceed a certain threshold, they need to be split into chunks and each chunk would correspond to its own QR code. The walkthrough illustrates how the chunking process works.
-  - Organizing the issuer package code such that it can be used easily by other services. Currently the issuer_test code lives alongside the issuer in the same package.
+  - Organizing the issuer package code such that it can be used easily by other services. Currently, the issuer_test code lives alongside the issuer in the same package.
 
 ## Local Development
 
