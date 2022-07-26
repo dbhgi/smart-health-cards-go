@@ -12,8 +12,6 @@ github.com/goccy/go-json/internal/errors
 github.com/goccy/go-json/internal/runtime
 # github.com/google/go-cmp v0.5.8
 ## explicit
-# github.com/google/uuid v1.3.0
-## explicit
 # github.com/lestrrat-go/blackmagic v1.0.1
 github.com/lestrrat-go/blackmagic
 # github.com/lestrrat-go/httpcc v1.0.1
@@ -23,8 +21,6 @@ github.com/lestrrat-go/httprc
 # github.com/lestrrat-go/iter v1.0.2
 github.com/lestrrat-go/iter/arrayiter
 github.com/lestrrat-go/iter/mapiter
-# github.com/lestrrat-go/jwx v1.2.25
-## explicit
 # github.com/lestrrat-go/jwx/v2 v2.0.4
 ## explicit
 github.com/lestrrat-go/jwx/v2/cert
@@ -38,17 +34,12 @@ github.com/lestrrat-go/jwx/v2/jwk
 github.com/lestrrat-go/jwx/v2/x25519
 # github.com/lestrrat-go/option v1.0.0
 github.com/lestrrat-go/option
-# github.com/lestrrat/go-jwx v0.9.1
-## explicit
 # github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 ## explicit
 github.com/skip2/go-qrcode
 github.com/skip2/go-qrcode/bitset
 github.com/skip2/go-qrcode/reedsolomon
-# github.com/stretchr/testify v1.8.0
-## explicit
 # golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f
-## explicit
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/curve25519/internal/field
 golang.org/x/crypto/ed25519
