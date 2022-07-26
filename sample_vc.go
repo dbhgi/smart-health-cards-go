@@ -1,4 +1,6 @@
-{
+package issuer
+
+const vc = `{
   "type": [
     "https://smarthealth.cards#health-card",
     "https://smarthealth.cards#immunization",
@@ -85,3 +87,4 @@
   },
   "rid": "MKyCxh7p6uQ"
 }
+`

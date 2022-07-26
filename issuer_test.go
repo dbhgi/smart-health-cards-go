@@ -10,25 +10,12 @@ import (
 	"fmt"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"gopkg.in/square/go-jose.v2"
-	"io/ioutil"
-	"os"
 	"testing"
 )
 
 func TestIssueCard(t *testing.T) {
-	file, err := os.Open("verifiable_credential.json")
-	if err != nil {
-		t.Fatalf("Failed to open verifiable_credential.json: %s", err.Error())
-	}
-	defer file.Close()
-
-	vcBytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		t.Fatalf("Failed to read json into bytes: %s", err.Error())
-	}
-
 	var verifiableCredential map[string]interface{}
-	err = json.Unmarshal(vcBytes, &verifiableCredential)
+	err := json.Unmarshal([]byte(vc), &verifiableCredential)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal fhir json: %s", err.Error())
 	}
