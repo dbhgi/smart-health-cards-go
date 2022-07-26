@@ -5,19 +5,27 @@ import (
 	"compress/flate"
 	"crypto/ecdsa"
 	"encoding/json"
-	"github.com/skip2/go-qrcode"
-	"gopkg.in/square/go-jose.v2"
+	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/skip2/go-qrcode"
+	"gopkg.in/square/go-jose.v2"
 )
 
 const (
 	MAX_SINGLE_JWS_SIZE = 1195
 	MAX_CHUNK_SIZE      = 1191
+
+	// LOWEST_VALUED_JWS_ORDINAL_VALUE From SMART health card spec: 45 is the ordinal value of -, the lowest-valued character that can appear in a compact JWS.
+	// Subtracting 45 from the ordinal values of valid JWS characters produces a range between 00 and 99, ensuring that each character of the JWS can be represented in exactly two base-10 numeric digits.
+	LOWEST_VALUED_JWS_ORDINAL_VALUE = 45
+
+	QR_CODE_PREFIX = "shc:/"
 )
 
 type SmartHealthCard struct {
-	IssuerUrl            string                 `json:"iss"`
+	IssuerURL            string                 `json:"iss"`
 	IssuanceDate         int                    `json:"nbf"`
 	VerifiableCredential map[string]interface{} `json:"vc"`
 }
@@ -31,14 +39,14 @@ type IssueCardInput struct {
 
 func IssueCard(input IssueCardInput) (string, error) {
 	card := SmartHealthCard{
-		IssuerUrl:            input.IssuerUrl,
+		IssuerURL:            input.IssuerUrl,
 		IssuanceDate:         time.Now().Hour(),
 		VerifiableCredential: input.VerifiableCredential,
 	}
 
 	jws, err := card.Sign(input.PrivateKey, input.KeyId)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to sign jws: %s", err.Error())
 	}
 	return jws.CompactSerialize()
 }
@@ -48,9 +56,9 @@ func IssueCard(input IssueCardInput) (string, error) {
 func GenerateQRCode(jws string) error {
 	// before generating to a qr code we need to convert each character to a byte
 	runes := bytes.Runes([]byte(jws))
-	s := "shc:/"
+	s := QR_CODE_PREFIX
 	for _, r := range runes {
-		nextRune := strconv.Itoa(int(r - 45))
+		nextRune := strconv.Itoa(int(r - LOWEST_VALUED_JWS_ORDINAL_VALUE))
 		if len(nextRune) == 1 {
 			nextRune = "0" + nextRune
 		}
@@ -79,18 +87,18 @@ func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey, keyId string) (*jose.JSONWe
 		Key:       key,
 	}, &options)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create new signer using provided key: %s", err.Error())
 	}
 
 	cardBytes, err := json.Marshal(s)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal card into json: %s", err)
 	}
 
 	// now we also need to compress the payload with DEFLATE algorithm
 	deflated, err := deflate(string(cardBytes))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to compress card bytes: %s", err)
 	}
 
 	return signer.Sign(deflated)
