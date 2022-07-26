@@ -31,7 +31,7 @@ type SmartHealthCard struct {
 }
 
 type IssueCardInput struct {
-	IssuerUrl            string
+	IssuerURL            string
 	PrivateKey           *ecdsa.PrivateKey
 	KeyId                string
 	VerifiableCredential map[string]interface{}
@@ -39,7 +39,7 @@ type IssueCardInput struct {
 
 func IssueCard(input IssueCardInput) (string, error) {
 	card := SmartHealthCard{
-		IssuerURL:            input.IssuerUrl,
+		IssuerURL:            input.IssuerURL,
 		IssuanceDate:         time.Now().Hour(),
 		VerifiableCredential: input.VerifiableCredential,
 	}
@@ -54,6 +54,7 @@ func IssueCard(input IssueCardInput) (string, error) {
 // TODO for a health card containing a larger payload, we would need to split the jws into chunks.
 // following the logic from this TCP-provided walkthrough: https://github.com/dvci/health-cards-walkthrough/blob/main/SMART%20Health%20Cards.ipynb
 func GenerateQRCode(jws string) error {
+	fmt.Printf("The length of the jws is: %d", len(jws))
 	// before generating to a qr code we need to convert each character to a byte
 	runes := bytes.Runes([]byte(jws))
 	s := QR_CODE_PREFIX
@@ -64,14 +65,14 @@ func GenerateQRCode(jws string) error {
 		}
 		s += nextRune
 	}
-	err := qrcode.WriteFile(s, qrcode.Low, 256, "qr.png")
-	if err != nil {
+
+	if err := qrcode.WriteFile(s, qrcode.Low, 256, "qr.png"); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Sign creates the signed jws, storing its serialized value onto the SmartHealthCard struct
+// Sign creates the signed jws
 func (s SmartHealthCard) Sign(key *ecdsa.PrivateKey, keyId string) (*jose.JSONWebSignature, error) {
 	options := jose.SignerOptions{
 		NonceSource: nil,

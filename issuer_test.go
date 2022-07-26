@@ -8,15 +8,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"testing"
+
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"gopkg.in/square/go-jose.v2"
-	"testing"
 )
 
 func TestIssueCard(t *testing.T) {
 	var verifiableCredential map[string]interface{}
-	err := json.Unmarshal([]byte(vc), &verifiableCredential)
-	if err != nil {
+	if err := json.Unmarshal([]byte(vc), &verifiableCredential); err != nil {
 		t.Fatalf("Failed to unmarshal fhir json: %s", err.Error())
 	}
 
@@ -42,7 +42,7 @@ func TestIssueCard(t *testing.T) {
 	keyId := base64.RawURLEncoding.EncodeToString(thumbprint)
 
 	jws, err := IssueCard(IssueCardInput{
-		IssuerUrl:            "https://smarthealth.cards/examples/issuer",
+		IssuerURL:            "https://smarthealth.cards/examples/issuer",
 		PrivateKey:           key,
 		VerifiableCredential: verifiableCredential,
 		KeyId:                keyId,
@@ -61,8 +61,7 @@ func TestIssueCard(t *testing.T) {
 		t.Fatalf("Failed to parse signed JWS from the issued jws: %s", err.Error())
 	}
 
-	_, err = card.Verify(&key.PublicKey)
-	if err != nil {
+	if _, err = card.Verify(&key.PublicKey); err != nil {
 		t.Fatalf("Failed to verify the card to retrieve its contents: %s", err.Error())
 	}
 
